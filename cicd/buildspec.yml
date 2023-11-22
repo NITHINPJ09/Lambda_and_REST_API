@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.x
+      
+  pre_build:
+    commands:
+      - cd cicd
+      - chmod +x install-terraform.sh configure.sh terraform-cmd.sh
+      - ./install-terraform.sh
+      - ./configure.sh
+
+  build:
+    commands:
+      - ./terraform-cmd.sh  
