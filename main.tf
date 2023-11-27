@@ -89,13 +89,13 @@ resource "aws_cloudwatch_log_group" "example" {
 # Create a lambda function
 # In terraform ${path.module} is the current directory.
 resource "aws_lambda_function" "terraform_lambda_func" {
-  function_name    = var.lambda_function_name
-  role             = aws_iam_role.lambda_role.arn
-  handler          = "hello-python.lambda_handler"
-  runtime          = "python3.8"
-  s3_bucket        = data.aws_s3_bucket.existing_lambda_bucket.id
-  s3_key           = data.aws_s3_object.existing_lambda_object.key
-  source_code_hash = data.aws_s3_object.existing_lambda_object.version_id
+  function_name     = var.lambda_function_name
+  role              = aws_iam_role.lambda_role.arn
+  handler           = "hello-python.lambda_handler"
+  runtime           = "python3.8"
+  s3_bucket         = data.aws_s3_bucket.existing_lambda_bucket.id
+  s3_key            = data.aws_s3_object.existing_lambda_object.key
+  s3_object_version = data.aws_s3_object.existing_lambda_object.version_id
   environment {
     variables = {
       S3_BUCKET_NAME = data.aws_s3_bucket.existing_lambda_bucket.id
