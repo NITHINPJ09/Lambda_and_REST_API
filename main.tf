@@ -14,7 +14,7 @@ provider "aws" {
 terraform {
   backend "s3" {
     bucket = "npj-terraform-state"
-    key    = "lambda/terraform.tfstate"
+    key    = "demo/terraform.tfstate"
     region = "eu-west-3"
   }
 }
@@ -130,12 +130,46 @@ resource "aws_api_gateway_integration" "integration" {
   uri                     = aws_lambda_function.terraform_lambda_func.invoke_arn
 }
 
+resource "aws_api_gateway_method_response" "example_method" {
+  rest_api_id = aws_api_gateway_rest_api.example_api.id
+  resource_id = aws_api_gateway_resource.example_resource.id
+  http_method = aws_api_gateway_method.example_method.http_method
+  status_code = "200"
+
+  //cors section
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true,
+    "method.response.header.Access-Control-Allow-Methods" = true,
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+
+}
+
+resource "aws_api_gateway_integration_response" "integration" {
+  rest_api_id = aws_api_gateway_rest_api.example_api.id
+  resource_id = aws_api_gateway_resource.example_resource.id
+  http_method = aws_api_gateway_method.example_method.http_method
+  status_code = aws_api_gateway_method_response.example_method.status_code
+
+  //cors
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS,POST,PUT'",
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [
+    aws_api_gateway_method.example_method,
+    aws_api_gateway_integration.integration
+  ]
+}
+
 resource "aws_lambda_permission" "apigw_lambda" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.terraform_lambda_func.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "arn:aws:execute-api:${var.myregion}:${var.accountId}:${aws_api_gateway_rest_api.example_api.id}/*/${aws_api_gateway_method.example_method.http_method}${aws_api_gateway_resource.example_resource.path}"
+  source_arn    = "${aws_api_gateway_rest_api.example_api.execution_arn}/*/*/*"
 }
 
 resource "aws_api_gateway_deployment" "example" {
